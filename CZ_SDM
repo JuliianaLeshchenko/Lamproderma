@@ -31,3 +31,8 @@ bio16 <- raster("wc2.0_bio_10m_16.tif")
 bio17 <- raster("wc2.0_bio_10m_17.tif")
 bio18 <- raster("wc2.0_bio_10m_18.tif")
 bio19 <- raster("wc2.0_bio_10m_19.tif")
+predictors <-cbind(bio1, bio2, bio3, bio4, bio5, bio6, bio7, bio8, bio9, bio10, bio11, bio12, bio13, bio14, bio15, bio16, bio17, bio18, bio19)
+#territory of interest
+CzechBorders <- shapefile("CZE_adm0.shp")
+save(CzechBorders, file = "Ukraine.Rdata")
+plot(CzechBorders)
