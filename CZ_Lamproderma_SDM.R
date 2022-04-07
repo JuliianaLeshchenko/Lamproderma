@@ -98,3 +98,29 @@ ggplot()+
        caption = "Data: Bioclim 10 min, Lamproderma sp.")+
   theme_minimal()
 library(corrplot)
+# Custom function to set significance level (p)
+cor.mtest <- function(mat, conf.level = 0.95){
+  mat <- as.matrix(mat)
+  n <- ncol(mat)
+  p.mat <- lowCI.mat <- uppCI.mat <- matrix(NA, n, n)
+  diag(p.mat) <- 0
+  diag(lowCI.mat) <- diag(uppCI.mat) <- 1
+  for(i in 1:(n-1)){
+    for(j in (i+1):n){
+      tmp <- cor.test(mat[,i], mat[,j], conf.level = conf.level)
+      p.mat[i,j] <- p.mat[j,i] <- tmp$p.value
+      lowCI.mat[i,j] <- lowCI.mat[j,i] <- tmp$conf.int[1]
+      uppCI.mat[i,j] <- uppCI.mat[j,i] <- tmp$conf.int[2]
+    }
+  }
+  return(list(p.mat, lowCI.mat, uppCI.mat))
+}
+# only numeric values w/o NA
+df_corr <- as.data.frame(predictors@data@values)
+
+M <- cor(df_corr) # correlation matrix
+#png("training_testing_data.png", width = 160, height = 120, units = "mm", res = 150)
+#corrplot(M, method="circle", type = "upper")
+#corrplot(M, method="square", type = "upper")
+#corrplot(M, method="color", type = "upper")
+corrplot(M, method = "square", order = "hclust", addrect = 9)
