@@ -28,8 +28,8 @@ CzechBorders <- shapefile("CZE_adm0.shp") #loading the territoty
 predictors1 <- crop(predictors, CzechBorders)
 predictors1 <-stack(predictors1)
 class(predictors1)
-plot(predictors)
-plot(predictors, 1) #show plot of the first predictor
+plot(predictors1)
+plot(predictors1, 1) #show plot of the first predictor
 
 #our data (created shp file in QGIS from csv)
 points<- shapefile("czhlenky.shp")
