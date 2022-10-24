@@ -59,15 +59,18 @@ v <- vifstep (preds)
 v
 significantPred <- exclude(preds, v)
 significantPred
-shape <- read_sf(dsn = ".", layer = "allpoints")
-shape.df <- as(shape, "data.frame")
-class(shape)
-data <- read.csv(file = 'GreatDataset.csv')
-coordinates(data) <- c("Lon", "Lat")
+shape <- readOGR(dsn = ".", layer = "allpoints")
+sp <- data.frame(shape@coords)
+occ <- rep(1,nrow(sp))
+occurrence <-cbind(sp, occ)
+names(occurrence)[1] <- "lon"
+names(occurrence)[2] <- "lat"
+rm(occ, sp)
 library(sdm)
-d <- sdmData(fromula=occurrence~.,train = data, predictors = significantPred)
-d
-m <- sdm(occurrence~.,d, methods=c("Bioclim","Maxent","RF"), replication = "boot",
+coordinates(occurrence) <- c("lon", "lat")
+d <- sdmData(fromula=occ~.,train = occurrence, predictors = significantPred, bg =
+               list(method="gRandom", n=3000))
+m <- sdm(occ~.,d, methods="Bioclim", replication = "boot",
          test.percent=20, n=5)
 m
 p1 <- predict(m,significantPred,filename="pr1.img", overwrite=TRUE)
