@@ -59,7 +59,13 @@ v <- vifstep (preds)
 v
 significantPred <- exclude(preds, v)
 significantPred
+plot(significantPred[[1]])
+points (occurrence,cex=0.5,pch=16)
+library(mapview)
+proj4string(occurrence) <- projection(raster())
+mapview(occurrence)
 shape <- readOGR(dsn = ".", layer = "allpoints")
+points (shape, col="blue")
 sp <- data.frame(shape@coords)
 occ <- rep(1,nrow(sp))
 occurrence <-cbind(sp, occ)
