@@ -161,6 +161,7 @@ points(backg_test, pch="-", cex=1.5, col="black")
 m2_maxent <- maxent(predictors, pres_train)
 #visualy evaluate the significance of the predictors
 plot(m2_maxent)
+predictors_new = predictors[[c()]] # specify layers' numbers
 e_maxent <- evaluate(pres_test, backg_test, m2_maxent, predictors)
 e_maxent
 plot(e_maxent, "ROC")
