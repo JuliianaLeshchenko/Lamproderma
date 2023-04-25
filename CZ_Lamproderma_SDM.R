@@ -15,6 +15,7 @@ fruiting_plot +
   coord_polar() +
   # Remove non-sensical y-axis details now that plot is circular
   theme(axis.text.y  = element_blank(), axis.title.y = element_blank()) #This is much more realistic.
+# SDM preparation
 library(dismo)
 library(sp)
 library(rgeos)
@@ -47,6 +48,7 @@ bio16 <- raster("bioclim16.tif")
 bio17 <- raster("bioclim17.tif")
 bio18 <- raster("bioclim18.tif")
 bio19 <- raster("bioclim19.tif")
+# or bio<-raster::getData('worldclim', var='bio',res=2.5) and crop in R
 plot(bio1)
 preds <- stack(bio1,bio2,bio3,bio4,bio5,bio6,bio7,bio8,bio9,bio10,bio11,bio12,bio13,bio14,bio15,bio16,bio17,bio18,bio19)
 names (preds)
