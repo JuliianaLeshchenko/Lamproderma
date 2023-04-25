@@ -249,7 +249,7 @@ rm(occ, sp)
 library(sdm)
 coordinates(occurrence) <- c("lon", "lat")
 d <- sdmData(fromula=occ~.,train = occurrence, predictors = significantPred, bg =
-               list(method="gRandom", n=3000))
+               list(method="gRandom", n=3000)) #gRandom=randomly across geographical space; n=number of runs
 getmethodNames()
 m <- sdm(occ~.,d, methods=c("Bioclim", 'rf', 'maxent'), replication = "boot",
          test.percent=20, n=100)
