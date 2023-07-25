@@ -1,20 +1,45 @@
-#GBIF phenology visualisation
-data <- read.csv("yourdataset.csv")
+data <- read.csv("GBIF_phenology.csv")
+# Sample data in a vector
+datetime_vector <- c(data$eventDate)
+# Separate date and time using 'T' as a separator
+date_vector <- sapply(strsplit(datetime_vector, "T"), `[`, 1)
+time_vector <- sapply(strsplit(datetime_vector, "T"), `[`, 2)
+# Create a data frame with separated date and time
+data$date <- date_vector
+# Display the resulting data frame
+print(data)
+# Delete the 'datetime_column' using the subset() function
+data <- subset(data, select = -eventDate)
 library(ggplot2)
-fruiting_plot <- 
-  ggplot(data, aes(month, species, fill = species)) +
+
+# Create a new column for species subgroup
+data$species_group <- ifelse(data$species %in% c("Lamproderma ovoideum", "Lamproderma aeneum"), "Strictly Nivicolous",
+                             ifelse(data$species %in% c("Lamproderma pseudomaculatum", "Lamproderma splendens"), "Facultatively Nivicolous",
+                                    ifelse(data$species %in% c("Lamproderma arcyrioides", "Lamproderma sauteri"), "Cryophilous", NA)))
+
+# Create the plot
+fruiting_plot <- ggplot(data, aes(month, species, fill = species_group)) +
   geom_tile() +
   scale_x_continuous(breaks = 1:12, labels = month.abb) +
   theme(
     axis.title.x = element_blank(),  # no need for x-axis title
-    axis.text.y  = element_text(hjust = 0)) # left-justify species names
-fruiting_plot
-#legend.position = "none" # Remove all legends from plot
-fruiting_plot +
-  # Make the plot circular
-  coord_polar() +
-  # Remove non-sensical y-axis details now that plot is circular
-  theme(axis.text.y  = element_blank(), axis.title.y = element_blank()) #This is much more realistic.
+    axis.text.y = element_text(hjust = 0))  # left-justify species names
+
+# Make the plot circular
+fruiting_plot <- fruiting_plot + coord_polar()
+
+# Remove non-sensical y-axis details now that plot is circular
+fruiting_plot <- fruiting_plot + theme(axis.text.y = element_blank(), axis.title.y = element_blank())
+
+# Set custom colors for the rings (pink, blue, violet)
+fruiting_plot <- fruiting_plot + scale_fill_manual(values = c("pink", "blue", "violet"))
+
+# Arrange species in a single circle
+fruiting_plot <- fruiting_plot + facet_grid(rows = vars(species_group))
+
+# Print the plot
+print(fruiting_plot)
+ggsave("fruiting_plots.png", width=14, height=10, unit="cm", dpi=300)
 # SDM preparation
 library(dismo)
 library(sp)
