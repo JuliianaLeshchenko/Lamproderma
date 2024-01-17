@@ -1,0 +1,110 @@
+library(raster)
+library(dismo)
+library(rJava)
+library(dplyr)
+library(tidyr)
+library(sf)
+library(mapview)
+library(sdm)
+setwd("~/Documents/Diploma")
+WorldClim_BIO1 <- raster("wc2.1_10m_bio_1.tif")
+plot(WorldClim_BIO1)
+ForestTemp_BIO1 <- raster("ForestBIO1.tif") #anazing, it’s in Lambert Azimutal Equal Area
+plot(ForestTemp_BIO1)
+
+#dataset for strictly nivicolous
+strictly_data <- st_read("strictly.shp")
+# SDM strictly nivicolous WorldClim
+library(sp)
+coordinates <- st_coordinates(strictly_data)
+# Assuming strictly_data is an sf object
+coords <- st_coordinates(strictly_data)
+# Convert to a data frame
+sp <- data.frame(lon = coords[, "X"], lat = coords[, "Y"])
+# Print the resulting data frame
+print(sp)
+occ <- rep(1,nrow(sp))
+occurrence <-cbind(sp, occ)
+names(occurrence)[1] <- "lon" 
+names(occurrence)[2] <- "lat"
+coordinates(occurrence) <- c("lon", "lat")
+d <- sdmData(fromula=occ~.,train = occurrence, predictors = WorldClim_BIO1, bg =
+               list(method="gRandom", n=3000)) #gRandom=randomly across geographical space; n=number of runs
+m <- sdm(occ~.,d, methods=c('maxent'), replication = "boot",test.percent=20, n=100)
+m
+#library(shiny)
+#gui(m)
+# Making predictions and plotting
+p <- predict(m,WorldClim_BIO1)
+plot(p)
+first_run <- p[[1]]
+plot(first_run)
+
+#FIRST PLOT
+plot(first_run, main = "", sub = "Data: strictly nivicolous, WorldClim BIO1")
+
+
+#  SDM strictly nivicolous ForestTemp
+extent(ForestTemp_BIO1)
+st_bbox(occurrence)
+
+
+proj4string(ForestTemp_BIO1) <- CRS("+proj=longlat +datum=WGS84 +no_defs")
+head(coordinates(occurrence))
+# Reproject data to Lambert Azimuthal Equal Area
+occurrence1 <- spTransform(occurrence, CRS('+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs'))
+head(coordinates(occurrence1))
+occurrence_cropped <- crop(occurrence, ForestTemp_BIO1)
+head(coordinates(occurrence_cropped))
+
+# Reproject occurrence data
+occurrence1 <- spTransform(occurrence, CRS('+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +units=m +no_defs'))
+
+# Check if occurrence1 is a SpatialPointsDataFrame
+class(occurrence1)
+
+# If not, convert it to a SpatialPointsDataFrame
+occurrence1 <- as(occurrence1, "SpatialPointsDataFrame")
+
+# Check again
+class(occurrence1)
+
+# Crop occurrence to match the extent of ForestTemp_BIO1
+occurrence_cropped <- crop(occurrence1, ForestTemp_BIO1)
+
+
+# Check the projection of the environmental data
+projection(occurrence_cropped)
+
+# Now, use the cropped occurrence data in sdmData
+d1 <- sdmData(formula = occ ~ ., train = occurrence_cropped, predictors = ForestTemp_BIO1, bg = list(method = "gRandom", n = 3000))
+m1 <- sdm(formula = occ ~ ., data = d1, methods = c('maxent'), replication = "boot", test.percent = 20, n = 10)
+m1
+gui(m1)
+# Create a subset of your occurrence data
+occurrence_subset <- occurrence_cropped[sample(nrow(occurrence_cropped), 100), ]
+
+# Perform prediction on the subset
+p1_subset <- predict(m1, occurrence_subset)
+
+# Making predictions and plotting
+p1 <- predict(m1, newdata = ForestTemp_BIO1)
+plot(p1)
+second_run <- p1[[1]]
+plot(second_run)
+
+# SECOND PLOT
+plot(second_run, main = "", sub = "Data: strictly nivicolous, ForestTemp BIO1")
+
+########
+# Load occurrence data in WGS 84 coordinates
+# Create a simple feature (sf) object with WGS 84 coordinates
+occurrence_sf <- st_as_sf(occurrence, coords = c("lon", "lat"), crs = 4326)
+
+# Reproject occurrence data to the projection of ForestTemp_BIO1
+occurrence_sf <- st_transform(occurrence_sf, crs = crs(ForestTemp_BIO1))
+
+# Convert back to a data frame
+occurrence <- as.data.frame(occurrence_sf)
+d1 <- sdmData(formula = occ ~ ., train = occurrence, predictors = ForestTemp_BIO1, bg =
+               list(method="gRandom", n=3000)) 
